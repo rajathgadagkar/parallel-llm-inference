@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.venv/
+venv/
+ENV/
+
+# PyTorch & Hugging Face caches / checkpoints
+*.pt
+*.pth
+*.bin
+*.safetensors
+.cache/
+checkpoints/
+models/
+
+# Generated protobuf / gRPC files (uncomment if generated at build time)
+# *_pb2.py
+# *_pb2_grpc.py
+
+# Experiment outputs & logs
+*.log
+results/
+outputs/
+
+# Testing & linting
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# OS & Editors
+.DS_Store
+.vscode/
+.idea/
+*.swp
