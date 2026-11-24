@@ -25,7 +25,8 @@ models/
 
 # Experiment outputs & logs
 *.log
-results/
+results/*
+!results/.gitkeep
 outputs/
 
 # Testing & linting
