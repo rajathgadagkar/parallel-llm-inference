@@ -137,5 +137,5 @@ pip install -r requirements.txt
 
 ## Contributors
 
-- Rajath Gadagkar
-- Sai Kiran
+- **Rajath Gadagkar** — [rajathgadagkar@gmail.com](mailto:rajathgadagkar@gmail.com)
+- **Sai Kiran** — [skn054@gmail.com](mailto:skn054@gmail.com)
