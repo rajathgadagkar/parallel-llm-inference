@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package inference;
+
+enum StatusCode {
+  STATUS_UNKNOWN = 0;
+  STATUS_OK = 1;
+  STATUS_STALE_EPOCH = 2;
+  STATUS_OVERLOADED = 3;
+  STATUS_CACHE_MISMATCH = 4;
+  STATUS_ERROR = 5;
+}
+
+enum TokenSelectionMode {
+  MODE_COORDINATOR_LOGITS = 0;  // Mode A: Worker 2 returns logits
+  MODE_WORKER_TOKEN_ID = 1;     // Mode B: Worker 2 selects token ID locally
+}
+
+message Stage1Request {
+  string request_id = 1;
+  string attempt_id = 2;
+  int32 step_id = 3;
+  int64 worker_epoch = 4;
+  repeated int64 input_ids = 5;
+  int32 cache_position = 6;
+  bool is_prefill = 7;
+  TokenSelectionMode selection_mode = 8;
+}
+
+message Stage2Request {
+  string request_id = 1;
+  string attempt_id = 2;
+  int32 step_id = 3;
+  int64 worker_epoch = 4;
+  repeated int64 tensor_shape = 5;
+  string dtype = 6;
+  bytes activation_data = 7;
+  int32 cache_position = 8;
+  TokenSelectionMode selection_mode = 9;
+}
+
+message Stage2Response {
+  string request_id = 1;
+  string attempt_id = 2;
+  int32 step_id = 3;
+  int64 worker_epoch = 4;
+  repeated int64 tensor_shape = 5;
+  string dtype = 6;
+  bytes logits_data = 7;        // Populated in Mode A
+  int64 selected_token_id = 8;  // Populated in Mode B
+  StatusCode status = 9;
+  string error_message = 10;
+}
+
+message Stage1Response {
+  string request_id = 1;
+  string attempt_id = 2;
+  int32 step_id = 3;
+  int64 worker_epoch = 4;
+  repeated int64 tensor_shape = 5;
+  string dtype = 6;
+  bytes logits_data = 7;
+  int64 selected_token_id = 8;
+  StatusCode status = 9;
+  string error_message = 10;
+  int64 activation_payload_bytes = 11;
+  int64 rpc_control_bytes = 12;
+}
+
+message ResetCacheRequest {
+  string request_id = 1;  // Empty "" clears all
+  string attempt_id = 2;  // Empty "" clears all attempts for request_id
+  int64 worker_epoch = 3;
+}
+
+message ResetCacheResponse {
+  StatusCode status = 1;
+  string error_message = 2;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  bool ready = 1;
+  int64 worker_epoch = 2;
+  int32 active_cache_entries = 3;
+}
+
+service Worker1Service {
+  rpc RunPipelineStep(Stage1Request) returns (Stage1Response);
+  rpc ResetCache(ResetCacheRequest) returns (ResetCacheResponse);
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}
+
+service Worker2Service {
+  rpc RunStage2(Stage2Request) returns (Stage2Response);
+  rpc ResetCache(ResetCacheRequest) returns (ResetCacheResponse);
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}
