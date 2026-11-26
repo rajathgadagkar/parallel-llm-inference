@@ -29,6 +29,11 @@ class _BasePartition:
                 self._key_locks[cache_key] = threading.Lock()
             return self._key_locks[cache_key]
 
+    def _prune_lock_unlocked(self, key: tuple[str, str]) -> None:
+        lock = self._key_locks.get(key)
+        if lock is not None and not lock.locked():
+            self._key_locks.pop(key, None)
+
     def reset(self, request_id: str, attempt_id: str | None = None) -> int:
         """Reset KV cache for (request_id, attempt_id) or all attempts of request_id."""
         with self._store_lock:
@@ -37,17 +42,22 @@ class _BasePartition:
                 removed = 1 if key in self._kv_store else 0
                 self._kv_store.pop(key, None)
                 self._last_used.pop(key, None)
+                self._prune_lock_unlocked(key)
                 return removed
             keys = [k for k in self._kv_store if k[0] == request_id]
             for k in keys:
                 self._kv_store.pop(k, None)
                 self._last_used.pop(k, None)
+                self._prune_lock_unlocked(k)
             return len(keys)
 
     def clear(self) -> None:
         with self._store_lock:
+            keys = list(self._kv_store.keys())
             self._kv_store.clear()
             self._last_used.clear()
+            for k in keys:
+                self._prune_lock_unlocked(k)
 
     def evict_expired(self, now: float | None = None) -> int:
         current = time.monotonic() if now is None else now
@@ -56,6 +66,7 @@ class _BasePartition:
             for k in expired:
                 self._kv_store.pop(k, None)
                 self._last_used.pop(k, None)
+                self._prune_lock_unlocked(k)
             return len(expired)
 
     def active_entries(self) -> int:

@@ -5,7 +5,7 @@ import warnings
 
 from . import inference_pb2 as inference__pb2
 
-GRPC_GENERATED_VERSION = '1.85.3'
+GRPC_GENERATED_VERSION = '1.85.4'
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 

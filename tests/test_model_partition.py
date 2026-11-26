@@ -157,17 +157,51 @@ def test_ttl_eviction_and_validation_errors(cfg):
 def test_proto_and_serialization_roundtrip():
     tensor = torch.randn(1, 4, 768, dtype=torch.float32)
     raw, shape, dtype = tensor_to_bytes(tensor)
-    req = inference_pb2.Stage2Request(
+    req1 = inference_pb2.Stage1Request(
         request_id="r1",
         attempt_id="a1",
         step_id=0,
-        worker_epoch=1,
+        worker1_epoch=1,
+        worker2_epoch=2,
+        input_ids=[10, 20, 30],
+        cache_position=0,
+        is_prefill=True,
+        selection_mode=inference_pb2.MODE_COORDINATOR_LOGITS,
+    )
+    assert req1.worker1_epoch == 1 and req1.worker2_epoch == 2
+
+    req2 = inference_pb2.Stage2Request(
+        request_id="r1",
+        attempt_id="a1",
+        step_id=0,
+        worker_epoch=2,
         tensor_shape=shape,
         dtype=dtype,
         activation_data=raw,
         cache_position=0,
         selection_mode=inference_pb2.MODE_COORDINATOR_LOGITS,
     )
-    reconstructed = bytes_to_tensor(req.activation_data, list(req.tensor_shape), req.dtype)
+    reconstructed = bytes_to_tensor(req2.activation_data, list(req2.tensor_shape), req2.dtype)
     assert torch.equal(tensor, reconstructed)
-    assert req.ByteSize() > len(raw)
+    assert req2.ByteSize() > len(raw)
+
+    resp1 = inference_pb2.Stage1Response(
+        request_id="r1",
+        attempt_id="a1",
+        step_id=0,
+        worker1_epoch=1,
+        worker2_epoch=2,
+        status=inference_pb2.STATUS_OK,
+        stage1_compute_ms=1.5,
+        stage1_queue_wait_ms=0.2,
+        stage2_compute_ms=1.8,
+        stage2_queue_wait_ms=0.3,
+    )
+    assert resp1.stage1_compute_ms == pytest.approx(1.5)
+    assert resp1.stage2_queue_wait_ms == pytest.approx(0.3)
+
+    reset_resp = inference_pb2.ResetCacheResponse(
+        status=inference_pb2.STATUS_OK,
+        cleared_entries=2,
+    )
+    assert reset_resp.cleared_entries == 2

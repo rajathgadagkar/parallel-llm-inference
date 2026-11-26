@@ -20,11 +20,12 @@ message Stage1Request {
   string request_id = 1;
   string attempt_id = 2;
   int32 step_id = 3;
-  int64 worker_epoch = 4;
-  repeated int64 input_ids = 5;
-  int32 cache_position = 6;
-  bool is_prefill = 7;
-  TokenSelectionMode selection_mode = 8;
+  int64 worker1_epoch = 4;
+  int64 worker2_epoch = 5;
+  repeated int64 input_ids = 6;
+  int32 cache_position = 7;
+  bool is_prefill = 8;
+  TokenSelectionMode selection_mode = 9;
 }
 
 message Stage2Request {
@@ -50,21 +51,28 @@ message Stage2Response {
   int64 selected_token_id = 8;  // Populated in Mode B
   StatusCode status = 9;
   string error_message = 10;
+  double stage2_compute_ms = 11;
+  double stage2_queue_wait_ms = 12;
 }
 
 message Stage1Response {
   string request_id = 1;
   string attempt_id = 2;
   int32 step_id = 3;
-  int64 worker_epoch = 4;
-  repeated int64 tensor_shape = 5;
-  string dtype = 6;
-  bytes logits_data = 7;
-  int64 selected_token_id = 8;
-  StatusCode status = 9;
-  string error_message = 10;
-  int64 activation_payload_bytes = 11;
-  int64 rpc_control_bytes = 12;
+  int64 worker1_epoch = 4;
+  int64 worker2_epoch = 5;
+  repeated int64 tensor_shape = 6;
+  string dtype = 7;
+  bytes logits_data = 8;
+  int64 selected_token_id = 9;
+  StatusCode status = 10;
+  string error_message = 11;
+  int64 activation_payload_bytes = 12;
+  int64 rpc_control_bytes = 13;
+  double stage1_compute_ms = 14;
+  double stage1_queue_wait_ms = 15;
+  double stage2_compute_ms = 16;
+  double stage2_queue_wait_ms = 17;
 }
 
 message ResetCacheRequest {
@@ -76,6 +84,7 @@ message ResetCacheRequest {
 message ResetCacheResponse {
   StatusCode status = 1;
   string error_message = 2;
+  int32 cleared_entries = 3;
 }
 
 message HealthRequest {}

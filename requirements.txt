@@ -1,8 +1,8 @@
 torch>=2.2.0
-transformers>=4.40.0
-grpcio>=1.62.0
-grpcio-tools>=1.62.0
-protobuf>=4.25.0
+transformers>=4.53.0
+grpcio>=1.85.3
+grpcio-tools>=1.85.3
+protobuf>=7.35.1
 numpy>=1.26.0
 pandas>=2.2.0
 matplotlib>=3.8.0
